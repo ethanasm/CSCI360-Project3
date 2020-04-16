@@ -10,7 +10,7 @@ public class project3cs360s2020 {
     private class Action {
         private final int action;
 
-        public Action(String action) {
+        public Action(String action) throws Exception {
             if (action.contentEquals("NORTH")) {
                 this.action = 0;
             } else if (action.contentEquals("EAST")) {
@@ -19,10 +19,8 @@ public class project3cs360s2020 {
                 this.action = 2;
             } else if (action.contentEquals("WEST")) {
                 this.action = 3;
-            } else if (action.contentEquals("STAY")) {
-                this.action = 4;
             } else {
-                this.action = -1;
+                throw new Exception("Invalid action");
             }
         }
 
@@ -132,14 +130,14 @@ public class project3cs360s2020 {
             }
         }
 
-        public MarkovDecisionProcess parseFile() {
+        public MarkovDecisionProcess parseFile() throws Exception {
             if (reader == null) {
                 return null;
             }
             project3cs360s2020.MarkovDecisionProcess mdp = null;
             try {
                 int gridSize = Integer.parseInt(reader.readLine());
-                 mdp = project3cs360s2020.this.new MarkovDecisionProcess(gridSize);
+                mdp = project3cs360s2020.this.new MarkovDecisionProcess(gridSize);
 
                 int numObstacles = Integer.parseInt(reader.readLine());
                 for (int i = 0; i < numObstacles; i++) {
@@ -199,12 +197,11 @@ public class project3cs360s2020 {
         private final int ACTION_EAST = 1;
         private final int ACTION_SOUTH = 2;
         private final int ACTION_WEST = 3;
-        private final int ACTION_STAY = 4;
 
         private final double PROB_INTENDED = 0.7;
         private final double PROB_ELSE = 0.1;
 
-        public MarkovDecisionProcess(int gridSize) {
+        public MarkovDecisionProcess(int gridSize) throws Exception {
             states = new Vector<State>();
             State s;
             for (int i = 0; i < gridSize; i++) {
@@ -217,6 +214,7 @@ public class project3cs360s2020 {
             actions.add(new Action("EAST"));
             actions.add(new Action("SOUTH"));
             actions.add(new Action("WEST"));
+            this.gridSize = gridSize;
         }
 
         public void addObstacle(int row, int col) {
@@ -265,10 +263,6 @@ public class project3cs360s2020 {
             int newRow = state.getRow();
             int newCol = state.getCol();
 
-            if (action.getAction() == ACTION_STAY) {
-                return state;
-            }
-
             switch (action.getAction()) {
                 case ACTION_NORTH:
                     newRow--;
@@ -304,7 +298,7 @@ public class project3cs360s2020 {
                 return transitions;
             }
 
-            for (int i = 0; i < actions.size() + 1; i++) {
+            for (int i = 0; i < actions.size(); i++) {
                 double prob;
                 if (action.getAction() == actions.get(i).getAction()) {
                     prob = PROB_INTENDED;
@@ -394,7 +388,14 @@ public class project3cs360s2020 {
     public static void main(String[] args) {
         project3cs360s2020 project3 = new project3cs360s2020();
         project3cs360s2020.Project3FileReader fileReader = project3.new Project3FileReader("input.txt");
-        project3cs360s2020.MarkovDecisionProcess mdp = fileReader.parseFile();
+        project3cs360s2020.MarkovDecisionProcess mdp = null;
+        try {
+            mdp = fileReader.parseFile();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println(e.getStackTrace());
+        }
+        
         mdp.setEpsilon(0.01);
         mdp.setGamma(0.9);
         mdp.setDestReward(100);
