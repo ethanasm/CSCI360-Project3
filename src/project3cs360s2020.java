@@ -1,9 +1,10 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Vector;
-
-import jdk.vm.ci.code.site.Mark;
 
 public class project3cs360s2020 {
     private class Action {
@@ -74,6 +75,10 @@ public class project3cs360s2020 {
             return destination;
         }
 
+        public void setReward(double reward) {
+            this.reward = reward;
+        }
+
         public double getReward() {
             return reward;
         }
@@ -131,22 +136,26 @@ public class project3cs360s2020 {
             if (reader == null) {
                 return null;
             }
-            int gridSize = Integer.parseInt(reader.readLine());
-            MarkovDecisionProcess mdp = new MarkovDecisionProcess(gridSize);
+            project3cs360s2020.MarkovDecisionProcess mdp = null;
+            try {
+                int gridSize = Integer.parseInt(reader.readLine());
+                 mdp = project3cs360s2020.this.new MarkovDecisionProcess(gridSize);
 
-            int numObstacles = Integer.parseInt(reader.readLine());
-            for (int i = 0; i < numObstacles; i++) {
+                int numObstacles = Integer.parseInt(reader.readLine());
+                for (int i = 0; i < numObstacles; i++) {
+                    String line = reader.readLine();
+                    String[] obstCoord = line.split(",");
+                    mdp.addObstacle(Integer.parseInt(obstCoord[1]), Integer.parseInt(obstCoord[0]));
+                }
+
                 String line = reader.readLine();
-                String[] obstCoord = line.split(",");
-                mdp.addObstacle(Integer.parseInt(obstCoord[1]), Integer.parseInt(obstCoord[0]));
+                String[] destCoord = line.split(",");
+                mdp.setDestination(Integer.parseInt(destCoord[1]), Integer.parseInt(destCoord[0]));
+
+                reader.close();
+            } catch(IOException ioe) {
+                System.out.println(ioe.getStackTrace());
             }
-
-            String line = reader.readLine();
-            String[] destCoord = line.split(",");
-            mdp.setDestination(Integer.parseInt(destCoord[1]), Integer.parseInt(destCoord[0]));
-
-            reader.close();
-            
             return mdp;
         }
     }
@@ -155,14 +164,24 @@ public class project3cs360s2020 {
         BufferedWriter writer;
 
         public Project3FileWriter(String filename) {
-            this.writer = new BufferedWriter(new FileWriter(filename));
+            try {
+                this.writer = new BufferedWriter(new FileWriter(filename));
+            } catch (IOException ioe) {
+                System.out.println(ioe.getStackTrace());
+            }
+            
         }
 
         public void writeFile(String res) {
-            if (writer != null) {
-                writer.write(res);
-                writer.close();
+            try {
+                if (writer != null) {
+                    writer.write(res);
+                    writer.close();
+                }
+            } catch (IOException ioe) {
+                System.out.println(ioe.getStackTrace());
             }
+            
         }
     }
 
@@ -186,14 +205,14 @@ public class project3cs360s2020 {
         private final double PROB_ELSE = 0.1;
 
         public MarkovDecisionProcess(int gridSize) {
-            states = new Vector();
+            states = new Vector<State>();
             State s;
             for (int i = 0; i < gridSize; i++) {
                 for (int j = 0; j < gridSize; j++) {
                     states.add(new State(j + (i * gridSize), i, j, 0.0, 0.0));
                 }
             }
-            actions = new Vector();
+            actions = new Vector<Action>();
             actions.add(new Action("NORTH"));
             actions.add(new Action("EAST"));
             actions.add(new Action("SOUTH"));
@@ -280,7 +299,7 @@ public class project3cs360s2020 {
         }
 
         public Vector<Transition> getTransitions(State state, Action action) {
-            Vector<Transition> transitions = new Vector();
+            Vector<Transition> transitions = new Vector<Transition>();
             if (state.isDestination()) {
                 return transitions;
             }
@@ -372,9 +391,10 @@ public class project3cs360s2020 {
         }
     }
 
-    public static void main() {
-        Project3FileReader fileReader = new Project3FileReader("input.txt");
-        MarkovDecisionProcess mdp = fileReader.parseFile();
+    public static void main(String[] args) {
+        project3cs360s2020 project3 = new project3cs360s2020();
+        project3cs360s2020.Project3FileReader fileReader = project3.new Project3FileReader("input.txt");
+        project3cs360s2020.MarkovDecisionProcess mdp = fileReader.parseFile();
         mdp.setEpsilon(0.01);
         mdp.setGamma(0.9);
         mdp.setDestReward(100);
@@ -382,11 +402,7 @@ public class project3cs360s2020 {
         mdp.setMoveReward(-1);
         mdp.setRewards();
         mdp.solve();
-        Project3FileWriter fileWriter = new Project3FileWriter("output.txt");
+        project3cs360s2020.Project3FileWriter fileWriter = project3.new Project3FileWriter("output.txt");
         fileWriter.writeFile(mdp.policyToString());
     }
-
-
-
-
 }
